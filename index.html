@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SLAY AWARDS 2025</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: black;
+            color: white;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        /* Шапка */
+        header {
+            background: #111;
+            padding: 20px 0;
+            border-bottom: 2px solid red;
+        }
+        
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+        
+        .logo span {
+            color: red;
+        }
+        
+        nav ul {
+            display: flex;
+            list-style: none;
+            gap: 20px;
+        }
+        
+        nav a {
+            color: white;
+            text-decoration: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+        
+        nav a:hover, nav a.active {
+            background: red;
+        }
+        
+        /* Главный экран */
+        .hero {
+            text-align: center;
+            padding: 80px 0;
+            background: linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8));
+        }
+        
+        .hero h1 {
+            font-size: 48px;
+            margin-bottom: 20px;
+            color: white;
+        }
+        
+        .hero p {
+            font-size: 20px;
+            color: #ccc;
+            margin-bottom: 30px;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 15px 30px;
+            background: red;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            font-size: 18px;
+            margin: 10px;
+        }
+        
+        .btn:hover {
+            background: darkred;
+        }
+        
+        /* Форма голосования */
+        .vote-form {
+            background: #111;
+            padding: 30px;
+            border-radius: 10px;
+            margin: 40px 0;
+            border: 1px solid #333;
+        }
+        
+        .vote-form h2 {
+            color: red;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .nomination {
+            background: #222;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border-left: 4px solid red;
+        }
+        
+        .nomination label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 10px;
+            font-size: 18px;
+        }
+        
+        .nomination input {
+            width: 100%;
+            padding: 12px;
+            background: black;
+            border: 1px solid #444;
+            color: white;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        
+        .nomination input:focus {
+            outline: none;
+            border-color: red;
+        }
+        
+        .form-buttons {
+            text-align: center;
+            margin-top: 30px;
+        }
+        
+        /* Результаты */
+        .results {
+            margin: 40px 0;
+        }
+        
+        .result-item {
+            background: #111;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+        }
+        
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #333;
+            padding-bottom: 10px;
+        }
+        
+        .result-bar {
+            height: 30px;
+            background: #222;
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .fill {
+            height: 100%;
+            background: red;
+            width: 0%;
+            transition: width 1s;
+        }
+        
+        /* Подвал */
+        footer {
+            background: #111;
+            padding: 30px 0;
+            margin-top: 50px;
+            border-top: 1px solid #333;
+            text-align: center;
+        }
+        
+        /* Адаптив */
+        @media (max-width: 768px) {
+            .header-inner {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            nav ul {
+                flex-direction: column;
+                gap: 10px;
+                margin-top: 20px;
+            }
+            
+            .hero h1 {
+                font-size: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Шапка -->
+    <header>
+        <div class="container header-inner">
+            <a href="#" class="logo">SLAY<span>.</span></a>
+            <nav>
+                <ul>
+                    <li><a href="#" class="active">Голосование</a></li>
+                    <li><a href="#results">Результаты</a></li>
+                    <li><a href="#winners">Победители 2024</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Главный экран -->
+    <section class="hero">
+        <div class="container">
+            <h1>SLAY AWARDS 2025</h1>
+            <p>Голосование за лучших стримеров года</p>
+            <a href="#vote" class="btn">ГОЛОСОВАТЬ СЕЙЧАС</a>
+            <a href="#results" class="btn">ПОСМОТРЕТЬ РЕЗУЛЬТАТЫ</a>
+        </div>
+    </section>
+
+    <!-- Форма голосования -->
+    <div class="container">
+        <div class="vote-form" id="vote">
+            <h2>ВЫБЕРИ ПОБЕДИТЕЛЕЙ В 12 НОМИНАЦИЯХ</h2>
+            
+            <div class="nomination">
+                <label>1. RND-KING</label>
+                <input type="text" id="n1" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>2. АФК RND года</label>
+                <input type="text" id="n2" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>3. Дотер года</label>
+                <input type="text" id="n3" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>4. Завоз года</label>
+                <input type="text" id="n4" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>5. Харизма года</label>
+                <input type="text" id="n5" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>6. Зашквар года</label>
+                <input type="text" id="n6" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>7. RND-добряк</label>
+                <input type="text" id="n7" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>8. RND-злодей</label>
+                <input type="text" id="n8" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>9. Прорыв года</label>
+                <input type="text" id="n9" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>10. Хейт года</label>
+                <input type="text" id="n10" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>11. RND QUEEN</label>
+                <input type="text" id="n11" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="nomination">
+                <label>12. RND-ELDER KING</label>
+                <input type="text" id="n12" placeholder="Введите имя стримера">
+            </div>
+            
+            <div class="form-buttons">
+                <button onclick="saveVote()" class="btn">СОХРАНИТЬ ГОЛОС</button>
+                <button onclick="clearVote()" class="btn" style="background: #444;">ОЧИСТИТЬ</button>
+            </div>
+            
+            <div id="message" style="text-align: center; margin-top: 20px; padding: 15px; border-radius: 5px; display: none;"></div>
+        </div>
+
+        <!-- Результаты голосования -->
+        <div class="results" id="results">
+            <h2 style="color: red; margin: 40px 0 20px 0;">РЕЗУЛЬТАТЫ ГОЛОСОВАНИЯ</h2>
+            <div id="resultsContainer">
+                <p style="text-align: center; color: #888;">Проголосуйте, чтобы увидеть результаты</p>
+            </div>
+        </div>
+
+        <!-- Победители 2024 -->
+        <div id="winners" style="margin: 60px 0;">
+            <h2 style="color: red; margin-bottom: 30px;">ПОБЕДИТЕЛИ 2024</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+                <div style="background: #111; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="width: 150px; height: 150px; background: #333; border-radius: 50%; margin: 0 auto 15px;"></div>
+                    <h3>SLAY QUEEN</h3>
+                    <p>GENSYXA</p>
+                </div>
+                <div style="background: #111; padding: 20px; border-radius: 10px; text-align: center;">
+                    <div style="width: 150px; height: 150px; background: #333; border-radius: 50%; margin: 0 auto 15px;"></div>
+                    <h3>ЛУЧШИЙ CS-СТРИМЕР</h3>
+                    <p>StRoGo</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подвал -->
+    <footer>
+        <div class="container">
+            <p>© SLAY 2025 — Клонированная версия для учебных целей</p>
+            <p style="margin-top: 20px; color: #888;">Голоса сохраняются в вашем браузере</p>
+        </div>
+    </footer>
+
+    <script>
+        // Сохранение голоса
+        function saveVote() {
+            // Проверяем, все ли заполнено
+            let allFilled = true;
+            for(let i = 1; i <= 12; i++) {
+                const input = document.getElementById('n' + i);
+                if(!input.value.trim()) {
+                    input.style.borderColor = 'red';
+                    allFilled = false;
+                } else {
+                    input.style.borderColor = '#444';
+                }
+            }
+            
+            if(!allFilled) {
+                showMessage('Заполните все номинации!', 'red');
+                return;
+            }
+            
+            // Сохраняем голос
+            const vote = {};
+            for(let i = 1; i <= 12; i++) {
+                vote['n' + i] = document.getElementById('n' + i).value;
+            }
+            
+            localStorage.setItem('slay_vote', JSON.stringify(vote));
+            localStorage.setItem('slay_vote_time', new Date().toLocaleString());
+            
+            // Обновляем статистику
+            updateStatistics(vote);
+            
+            showMessage('✅ Ваш голос сохранен!', '#4CAF50');
+            showResults();
+        }
+        
+        // Показать сообщение
+        function showMessage(text, color) {
+            const msg = document.getElementById('message');
+            msg.innerHTML = text;
+            msg.style.backgroundColor = color + '20';
+            msg.style.color = color;
+            msg.style.border = '1px solid ' + color;
+            msg.style.display = 'block';
+            
+            setTimeout(() => {
+                msg.style.display = 'none';
+            }, 3000);
+        }
+        
+        // Обновить статистику
+        function updateStatistics(vote) {
+            // Получаем текущую статистику
+            let stats = JSON.parse(localStorage.getItem('slay_stats')) || {};
+            
+            // Названия номинаций
+            const noms = [
+                'RND-KING', 'АФК RND года', 'Дотер года', 'Завоз года',
+                'Харизма года', 'Зашквар года', 'RND-добряк', 'RND-злодей',
+                'Прорыв года', 'Хейт года', 'RND QUEEN', 'RND-ELDER KING'
+            ];
+            
+            // Обновляем статистику
+            noms.forEach((nom, index) => {
+                const candidate = vote['n' + (index + 1)];
+                if(candidate) {
+                    if(!stats[nom]) stats[nom] = {};
+                    if(!stats[nom][candidate]) stats[nom][candidate] = 0;
+                    stats[nom][candidate]++;
+                }
+            });
+            
+            // Сохраняем статистику
+            localStorage.setItem('slay_stats', JSON.stringify(stats));
+        }
+        
+        // Показать результаты
+        function showResults() {
+            const stats = JSON.parse(localStorage.getItem('slay_stats')) || {};
+            const container = document.getElementById('resultsContainer');
+            
+            if(Object.keys(stats).length === 0) {
+                container.innerHTML = '<p style="text-align: center; color: #888;">Еще нет голосов</p>';
+                return;
+            }
+            
+            let html = '';
+            const noms = [
+                'RND-KING', 'АФК RND года', 'Дотер года', 'Завоз года',
+                'Харизма года', 'Зашквар года', 'RND-добряк', 'RND-злодей',
+                'Прорыв года', 'Хейт года', 'RND QUEEN', 'RND-ELDER KING'
+            ];
+            
+            noms.forEach(nom => {
+                if(stats[nom]) {
+                    html += '<div class="result-item">';
+                    html += '<div class="result-header">';
+                    html += `<h3>${nom}</h3>`;
+                    html += `<span>Всего голосов: ${Object.values(stats[nom]).reduce((a,b) => a+b, 0)}</span>`;
+                    html += '</div>';
+                    
+                    // Сортируем кандидатов по голосам
+                    const candidates = Object.keys(stats[nom])
+                        .sort((a,b) => stats[nom][b] - stats[nom][a])
+                        .slice(0, 5);
+                    
+                    // Находим максимум для процентов
+                    const maxVotes = Math.max(...candidates.map(c => stats[nom][c]));
+                    
+                    candidates.forEach(candidate => {
+                        const votes = stats[nom][candidate];
+                        const percent = (votes / maxVotes) * 100;
+                        
+                        html += `<div style="margin-bottom: 10px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <span>${candidate}</span>
+                                <span style="color: red;">${votes} голосов</span>
+                            </div>
+                            <div class="result-bar">
+                                <div class="fill" style="width: ${percent}%"></div>
+                            </div>
+                        </div>`;
+                    });
+                    
+                    html += '</div>';
+                }
+            });
+            
+            container.innerHTML = html;
+            
+            // Анимация полосок
+            setTimeout(() => {
+                document.querySelectorAll('.fill').forEach(fill => {
+                    const width = fill.style.width;
+                    fill.style.width = '0%';
+                    setTimeout(() => {
+                        fill.style.width = width;
+                    }, 100);
+                });
+            }, 100);
+        }
+        
+        // Очистить голос
+        function clearVote() {
+            if(confirm('Очистить форму голосования?')) {
+                for(let i = 1; i <= 12; i++) {
+                    document.getElementById('n' + i).value = '';
+                }
+                showMessage('Форма очищена', '#ff9800');
+            }
+        }
+        
+        // Загрузить сохраненный голос при загрузке страницы
+        window.onload = function() {
+            const savedVote = JSON.parse(localStorage.getItem('slay_vote'));
+            if(savedVote) {
+                for(let i = 1; i <= 12; i++) {
+                    const input = document.getElementById('n' + i);
+                    if(savedVote['n' + i]) {
+                        input.value = savedVote['n' + i];
+                    }
+                }
+            }
+            
+            showResults();
+        }
+        
+        // Экспорт данных (для админа)
+        function exportData() {
+            const stats = localStorage.getItem('slay_stats');
+            const vote = localStorage.getItem('slay_vote');
+            
+            const data = {
+                stats: JSON.parse(stats || '{}'),
+                myVote: JSON.parse(vote || '{}'),
+                exportTime: new Date().toISOString()
+            };
+            
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'slay_votes.json';
+            a.click();
+            
+            showMessage('✅ Данные экспортированы в файл slay_votes.json', '#4CAF50');
+        }
+        
+        // Скрытая админка по Ctrl+Alt+D
+        document.addEventListener('keydown', function(e) {
+            if(e.ctrlKey && e.altKey && e.key === 'd') {
+                const admin = prompt('Админ-действие:\n1 - Экспорт данных\n2 - Очистить все\n3 - Статистика');
+                
+                if(admin === '1') {
+                    exportData();
+                } else if(admin === '2') {
+                    if(confirm('УДАЛИТЬ ВСЕ ДАННЫЕ?')) {
+                        localStorage.clear();
+                        showMessage('🗑️ Все данные удалены', 'red');
+                        showResults();
+                    }
+                } else if(admin === '3') {
+                    const stats = JSON.parse(localStorage.getItem('slay_stats') || '{}');
+                    let total = 0;
+                    Object.values(stats).forEach(nom => {
+                        Object.values(nom).forEach(count => {
+                            total += count;
+                        });
+                    });
+                    alert(`Всего голосов в статистике: ${total}`);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
