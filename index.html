@@ -29,6 +29,9 @@
             background: #111;
             padding: 20px 0;
             border-bottom: 2px solid red;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
         }
         
         .header-inner {
@@ -94,10 +97,20 @@
             font-weight: bold;
             font-size: 18px;
             margin: 10px;
+            border: none;
+            cursor: pointer;
         }
         
         .btn:hover {
             background: darkred;
+        }
+        
+        .btn-secondary {
+            background: #333;
+        }
+        
+        .btn-secondary:hover {
+            background: #444;
         }
         
         /* Форма голосования */
@@ -148,6 +161,10 @@
         .form-buttons {
             text-align: center;
             margin-top: 30px;
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
         }
         
         /* Результаты */
@@ -210,6 +227,78 @@
             .hero h1 {
                 font-size: 36px;
             }
+            
+            .form-buttons {
+                flex-direction: column;
+            }
+            
+            .btn {
+                width: 100%;
+                margin: 5px 0;
+            }
+        }
+        
+        /* Сообщения */
+        .message {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+        }
+        
+        .success {
+            background: rgba(76, 175, 80, 0.2);
+            border: 1px solid #4CAF50;
+            color: #4CAF50;
+        }
+        
+        .error {
+            background: rgba(244, 67, 54, 0.2);
+            border: 1px solid #f44336;
+            color: #f44336;
+        }
+        
+        .info {
+            background: rgba(33, 150, 243, 0.2);
+            border: 1px solid #2196F3;
+            color: #2196F3;
+        }
+        
+        /* Админ-панель */
+        .admin-panel {
+            background: #111;
+            padding: 25px;
+            border-radius: 10px;
+            margin: 30px 0;
+            border: 2px solid red;
+        }
+        
+        .admin-panel h3 {
+            color: red;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        
+        .stat-card {
+            background: #222;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 32px;
+            color: red;
+            font-weight: bold;
+            margin: 10px 0;
         }
     </style>
 </head>
@@ -222,6 +311,7 @@
                 <ul>
                     <li><a href="#" class="active">Голосование</a></li>
                     <li><a href="#results">Результаты</a></li>
+                    <li><a href="#admin">Для админа</a></li>
                     <li><a href="#winners">Победители 2024</a></li>
                 </ul>
             </nav>
@@ -234,7 +324,7 @@
             <h1>SLAY AWARDS 2025</h1>
             <p>Голосование за лучших стримеров года</p>
             <a href="#vote" class="btn">ГОЛОСОВАТЬ СЕЙЧАС</a>
-            <a href="#results" class="btn">ПОСМОТРЕТЬ РЕЗУЛЬТАТЫ</a>
+            <a href="#results" class="btn btn-secondary">РЕЗУЛЬТАТЫ</a>
         </div>
     </section>
 
@@ -305,18 +395,57 @@
             
             <div class="form-buttons">
                 <button onclick="saveVote()" class="btn">СОХРАНИТЬ ГОЛОС</button>
-                <button onclick="clearVote()" class="btn" style="background: #444;">ОЧИСТИТЬ</button>
+                <button onclick="clearVote()" class="btn btn-secondary">ОЧИСТИТЬ ФОРМУ</button>
+                <button onclick="exportMyVote()" class="btn" style="background: #4CAF50;">📥 СКАЧАТЬ МОЙ ГОЛОС</button>
+                <button onclick="shareMyVote()" class="btn" style="background: #2196F3;">📤 ОТПРАВИТЬ АДМИНУ</button>
             </div>
             
-            <div id="message" style="text-align: center; margin-top: 20px; padding: 15px; border-radius: 5px; display: none;"></div>
+            <div id="message" class="message"></div>
         </div>
 
         <!-- Результаты голосования -->
         <div class="results" id="results">
             <h2 style="color: red; margin: 40px 0 20px 0;">РЕЗУЛЬТАТЫ ГОЛОСОВАНИЯ</h2>
             <div id="resultsContainer">
-                <p style="text-align: center; color: #888;">Проголосуйте, чтобы увидеть результаты</p>
+                <p style="text-align: center; color: #888; padding: 20px;">
+                    Здесь появятся результаты после голосования
+                </p>
             </div>
+        </div>
+
+        <!-- Админ-панель (видна всем, но функционал только для тебя) -->
+        <div class="admin-panel" id="admin">
+            <h3>📊 ПАНЕЛЬ СБОРА РЕЗУЛЬТАТОВ</h3>
+            <p style="text-align: center; color: #ccc; margin-bottom: 20px;">
+                Для администратора: собирайте голоса от всех участников
+            </p>
+            
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h4>Мой голос</h4>
+                    <div class="stat-number" id="myVotesCount">0</div>
+                    <button onclick="exportMyVote()" class="btn" style="width: 100%; margin: 5px 0;">Скачать</button>
+                </div>
+                
+                <div class="stat-card">
+                    <h4>Локальная статистика</h4>
+                    <div class="stat-number" id="localStatsCount">0</div>
+                    <button onclick="exportAllStats()" class="btn" style="width: 100%; margin: 5px 0;">Экспорт</button>
+                </div>
+                
+                <div class="stat-card">
+                    <h4>Загрузить голоса</h4>
+                    <input type="file" id="voteFiles" accept=".json" style="width: 100%; margin: 10px 0; padding: 10px; background: #333; color: white; border-radius: 5px;">
+                    <button onclick="loadVotesFromFile()" class="btn" style="width: 100%;">Загрузить файл</button>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin-top: 20px;">
+                <button onclick="showCombinedResults()" class="btn btn-secondary" style="margin: 5px;">Объединить все</button>
+                <button onclick="clearAllData()" class="btn" style="background: #f44336; margin: 5px;">Очистить всё</button>
+            </div>
+            
+            <div id="adminMessage" class="message" style="margin-top: 20px;"></div>
         </div>
 
         <!-- Победители 2024 -->
@@ -324,14 +453,14 @@
             <h2 style="color: red; margin-bottom: 30px;">ПОБЕДИТЕЛИ 2024</h2>
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
                 <div style="background: #111; padding: 20px; border-radius: 10px; text-align: center;">
-                    <div style="width: 150px; height: 150px; background: #333; border-radius: 50%; margin: 0 auto 15px;"></div>
+                    <div style="width: 150px; height: 150px; background: #333; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 48px;">👑</div>
                     <h3>SLAY QUEEN</h3>
-                    <p>GENSYXA</p>
+                    <p style="color: red; font-weight: bold;">GENSYXA</p>
                 </div>
                 <div style="background: #111; padding: 20px; border-radius: 10px; text-align: center;">
-                    <div style="width: 150px; height: 150px; background: #333; border-radius: 50%; margin: 0 auto 15px;"></div>
+                    <div style="width: 150px; height: 150px; background: #333; border-radius: 50%; margin: 0 auto 15px; display: flex; align-items: center; justify-content: center; font-size: 48px;">🎮</div>
                     <h3>ЛУЧШИЙ CS-СТРИМЕР</h3>
-                    <p>StRoGo</p>
+                    <p style="color: red; font-weight: bold;">StRoGo</p>
                 </div>
             </div>
         </div>
@@ -341,18 +470,48 @@
     <footer>
         <div class="container">
             <p>© SLAY 2025 — Клонированная версия для учебных целей</p>
-            <p style="margin-top: 20px; color: #888;">Голоса сохраняются в вашем браузере</p>
+            <p style="margin-top: 20px; color: #888;">
+                Голоса сохраняются в вашем браузере. Для сбора результатов администратору нужны файлы голосов.
+            </p>
+            <p style="margin-top: 10px; color: #666;">
+                <strong>Инструкция для участников:</strong> После голосования нажмите "Скачать мой голос" и отправьте файл администратору.
+            </p>
         </div>
     </footer>
 
     <script>
+        // Названия номинаций
+        const nominations = [
+            'RND-KING', 'АФК RND года', 'Дотер года', 'Завоз года',
+            'Харизма года', 'Зашквар года', 'RND-добряк', 'RND-злодей',
+            'Прорыв года', 'Хейт года', 'RND QUEEN', 'RND-ELDER KING'
+        ];
+
+        // Показать сообщение
+        function showMessage(text, type = 'info', elementId = 'message') {
+            const msg = document.getElementById(elementId);
+            msg.innerHTML = text;
+            msg.className = `message ${type}`;
+            msg.style.display = 'block';
+            
+            if(type !== 'error') {
+                setTimeout(() => {
+                    msg.style.display = 'none';
+                }, 5000);
+            }
+        }
+
         // Сохранение голоса
         function saveVote() {
-            // Проверяем, все ли заполнено
             let allFilled = true;
+            const vote = {};
+            
             for(let i = 1; i <= 12; i++) {
                 const input = document.getElementById('n' + i);
-                if(!input.value.trim()) {
+                const value = input.value.trim();
+                vote['n' + i] = value;
+                
+                if(!value) {
                     input.style.borderColor = 'red';
                     allFilled = false;
                 } else {
@@ -361,54 +520,27 @@
             }
             
             if(!allFilled) {
-                showMessage('Заполните все номинации!', 'red');
+                showMessage('Заполните все номинации!', 'error');
                 return;
             }
             
             // Сохраняем голос
-            const vote = {};
-            for(let i = 1; i <= 12; i++) {
-                vote['n' + i] = document.getElementById('n' + i).value;
-            }
-            
-            localStorage.setItem('slay_vote', JSON.stringify(vote));
+            localStorage.setItem('slay_my_vote', JSON.stringify(vote));
             localStorage.setItem('slay_vote_time', new Date().toLocaleString());
             
             // Обновляем статистику
             updateStatistics(vote);
             
-            showMessage('✅ Ваш голос сохранен!', '#4CAF50');
+            showMessage('✅ Ваш голос сохранен! Скачайте файл и отправьте админу.', 'success');
+            updateMyVotesCount();
             showResults();
         }
-        
-        // Показать сообщение
-        function showMessage(text, color) {
-            const msg = document.getElementById('message');
-            msg.innerHTML = text;
-            msg.style.backgroundColor = color + '20';
-            msg.style.color = color;
-            msg.style.border = '1px solid ' + color;
-            msg.style.display = 'block';
-            
-            setTimeout(() => {
-                msg.style.display = 'none';
-            }, 3000);
-        }
-        
+
         // Обновить статистику
         function updateStatistics(vote) {
-            // Получаем текущую статистику
             let stats = JSON.parse(localStorage.getItem('slay_stats')) || {};
             
-            // Названия номинаций
-            const noms = [
-                'RND-KING', 'АФК RND года', 'Дотер года', 'Завоз года',
-                'Харизма года', 'Зашквар года', 'RND-добряк', 'RND-злодей',
-                'Прорыв года', 'Хейт года', 'RND QUEEN', 'RND-ELDER KING'
-            ];
-            
-            // Обновляем статистику
-            noms.forEach((nom, index) => {
+            nominations.forEach((nom, index) => {
                 const candidate = vote['n' + (index + 1)];
                 if(candidate) {
                     if(!stats[nom]) stats[nom] = {};
@@ -417,46 +549,43 @@
                 }
             });
             
-            // Сохраняем статистику
             localStorage.setItem('slay_stats', JSON.stringify(stats));
+            updateStatsCount();
         }
-        
+
         // Показать результаты
         function showResults() {
             const stats = JSON.parse(localStorage.getItem('slay_stats')) || {};
             const container = document.getElementById('resultsContainer');
             
             if(Object.keys(stats).length === 0) {
-                container.innerHTML = '<p style="text-align: center; color: #888;">Еще нет голосов</p>';
+                container.innerHTML = '<p style="text-align: center; color: #888; padding: 30px;">Еще нет голосов</p>';
                 return;
             }
             
             let html = '';
-            const noms = [
-                'RND-KING', 'АФК RND года', 'Дотер года', 'Завоз года',
-                'Харизма года', 'Зашквар года', 'RND-добряк', 'RND-злодей',
-                'Прорыв года', 'Хейт года', 'RND QUEEN', 'RND-ELDER KING'
-            ];
+            let totalVotes = 0;
             
-            noms.forEach(nom => {
+            nominations.forEach(nom => {
                 if(stats[nom]) {
                     html += '<div class="result-item">';
                     html += '<div class="result-header">';
                     html += `<h3>${nom}</h3>`;
-                    html += `<span>Всего голосов: ${Object.values(stats[nom]).reduce((a,b) => a+b, 0)}</span>`;
+                    const nomVotes = Object.values(stats[nom]).reduce((a,b) => a+b, 0);
+                    totalVotes += nomVotes;
+                    html += `<span>Всего голосов: ${nomVotes}</span>`;
                     html += '</div>';
                     
-                    // Сортируем кандидатов по голосам
+                    // Сортируем кандидатов
                     const candidates = Object.keys(stats[nom])
                         .sort((a,b) => stats[nom][b] - stats[nom][a])
                         .slice(0, 5);
                     
-                    // Находим максимум для процентов
                     const maxVotes = Math.max(...candidates.map(c => stats[nom][c]));
                     
                     candidates.forEach(candidate => {
                         const votes = stats[nom][candidate];
-                        const percent = (votes / maxVotes) * 100;
+                        const percent = maxVotes > 0 ? (votes / maxVotes) * 100 : 0;
                         
                         html += `<div style="margin-bottom: 10px;">
                             <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
@@ -473,9 +602,15 @@
                 }
             });
             
-            container.innerHTML = html;
+            container.innerHTML = `
+                <div style="background: #111; padding: 20px; border-radius: 10px; margin-bottom: 20px; text-align: center;">
+                    <h3 style="color: #4CAF50;">📊 ОБЩАЯ СТАТИСТИКА</h3>
+                    <p style="font-size: 18px;">Всего голосов: <span style="color: red; font-weight: bold;">${totalVotes}</span></p>
+                </div>
+                ${html}
+            `;
             
-            // Анимация полосок
+            // Анимация
             setTimeout(() => {
                 document.querySelectorAll('.fill').forEach(fill => {
                     const width = fill.style.width;
@@ -486,20 +621,220 @@
                 });
             }, 100);
         }
-        
+
         // Очистить голос
         function clearVote() {
             if(confirm('Очистить форму голосования?')) {
                 for(let i = 1; i <= 12; i++) {
                     document.getElementById('n' + i).value = '';
+                    document.getElementById('n' + i).style.borderColor = '#444';
                 }
-                showMessage('Форма очищена', '#ff9800');
+                showMessage('Форма очищена', 'info');
             }
         }
-        
-        // Загрузить сохраненный голос при загрузке страницы
+
+        // Скачать мой голос
+        function exportMyVote() {
+            const vote = JSON.parse(localStorage.getItem('slay_my_vote') || '{}');
+            const time = localStorage.getItem('slay_vote_time');
+            
+            if(Object.keys(vote).length === 0) {
+                showMessage('Сначала проголосуйте!', 'error');
+                return;
+            }
+            
+            const data = {
+                vote: vote,
+                time: time || new Date().toLocaleString(),
+                nominations: nominations
+            };
+            
+            downloadJSON(data, 'slay_my_vote.json');
+            showMessage('✅ Файл с вашим голосом скачан! Отправьте его администратору.', 'success');
+        }
+
+        // Скачать всю статистику
+        function exportAllStats() {
+            const stats = localStorage.getItem('slay_stats');
+            const myVote = localStorage.getItem('slay_my_vote');
+            
+            if(!stats && !myVote) {
+                showMessage('Нет данных для экспорта', 'error', 'adminMessage');
+                return;
+            }
+            
+            const data = {
+                statistics: JSON.parse(stats || '{}'),
+                myVote: JSON.parse(myVote || '{}'),
+                exportTime: new Date().toLocaleString(),
+                totalVotes: countTotalVotes(JSON.parse(stats || '{}'))
+            };
+            
+            downloadJSON(data, 'slay_all_stats.json');
+            showMessage('✅ Вся статистика экспортирована!', 'success', 'adminMessage');
+        }
+
+        // Загрузить голоса из файла
+        function loadVotesFromFile() {
+            const fileInput = document.getElementById('voteFiles');
+            const file = fileInput.files[0];
+            
+            if(!file) {
+                showMessage('Выберите файл!', 'error', 'adminMessage');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    
+                    if(data.vote) {
+                        // Это голос пользователя
+                        showMessage('✅ Загружен голос пользователя', 'success', 'adminMessage');
+                        
+                        // Обновляем форму
+                        for(let i = 1; i <= 12; i++) {
+                            if(data.vote['n' + i]) {
+                                document.getElementById('n' + i).value = data.vote['n' + i];
+                            }
+                        }
+                        
+                        // Добавляем в статистику
+                        updateStatistics(data.vote);
+                        
+                    } else if(data.statistics) {
+                        // Это статистика
+                        showMessage('✅ Загружена статистика', 'success', 'adminMessage');
+                        combineStatistics(data.statistics);
+                    }
+                    
+                    updateStatsCount();
+                    showResults();
+                    
+                } catch(err) {
+                    showMessage('Ошибка чтения файла: ' + err.message, 'error', 'adminMessage');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Объединить статистику
+        function combineStatistics(newStats) {
+            let currentStats = JSON.parse(localStorage.getItem('slay_stats')) || {};
+            
+            for(let nom in newStats) {
+                if(!currentStats[nom]) currentStats[nom] = {};
+                
+                for(let candidate in newStats[nom]) {
+                    if(!currentStats[nom][candidate]) {
+                        currentStats[nom][candidate] = 0;
+                    }
+                    currentStats[nom][candidate] += newStats[nom][candidate];
+                }
+            }
+            
+            localStorage.setItem('slay_stats', JSON.stringify(currentStats));
+            showMessage('✅ Статистика объединена!', 'success', 'adminMessage');
+        }
+
+        // Показать объединенные результаты
+        function showCombinedResults() {
+            showResults();
+            showMessage('Текущие результаты показаны выше', 'info', 'adminMessage');
+        }
+
+        // Очистить все данные
+        function clearAllData() {
+            if(confirm('ВНИМАНИЕ! Удалить ВСЕ данные голосования?')) {
+                localStorage.clear();
+                for(let i = 1; i <= 12; i++) {
+                    document.getElementById('n' + i).value = '';
+                }
+                showMessage('Все данные удалены', 'error', 'adminMessage');
+                updateMyVotesCount();
+                updateStatsCount();
+                showResults();
+            }
+        }
+
+        // Подсчитать голоса
+        function countTotalVotes(stats) {
+            let total = 0;
+            for(let nom in stats) {
+                for(let candidate in stats[nom]) {
+                    total += stats[nom][candidate];
+                }
+            }
+            return total;
+        }
+
+        // Обновить счетчики
+        function updateMyVotesCount() {
+            const vote = JSON.parse(localStorage.getItem('slay_my_vote') || '{}');
+            const count = Object.keys(vote).filter(key => vote[key].trim()).length;
+            document.getElementById('myVotesCount').textContent = count;
+        }
+
+        function updateStatsCount() {
+            const stats = JSON.parse(localStorage.getItem('slay_stats') || '{}');
+            const total = countTotalVotes(stats);
+            document.getElementById('localStatsCount').textContent = total;
+        }
+
+        // Скачать JSON
+        function downloadJSON(data, filename) {
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Поделиться голосом (отправить админу)
+        function shareMyVote() {
+            const vote = JSON.parse(localStorage.getItem('slay_my_vote') || '{}');
+            
+            if(Object.keys(vote).length === 0) {
+                showMessage('Сначала проголосуйте!', 'error');
+                return;
+            }
+            
+            // Создаем текст для отправки
+            let text = "Мой голос на SLAY AWARDS 2025:\n\n";
+            nominations.forEach((nom, index) => {
+                if(vote['n' + (index + 1)]) {
+                    text += `${index + 1}. ${nom}: ${vote['n' + (index + 1)]}\n`;
+                }
+            });
+            
+            text += `\nВремя: ${localStorage.getItem('slay_vote_time') || new Date().toLocaleString()}`;
+            
+            // Копируем в буфер обмена
+            navigator.clipboard.writeText(text).then(() => {
+                showMessage('✅ Голос скопирован! Отправьте его администратору в Telegram/Discord.', 'success');
+                
+                // Показываем подсказку
+                alert('Текст вашего голоса скопирован!\n\nТеперь:\n1. Откройте Telegram/Discord\n2. Найдите администратора\n3. Вставьте текст (Ctrl+V)\n4. Отправьте сообщение');
+            }).catch(err => {
+                // Если не получилось скопировать, показываем текст
+                showMessage('Скопируйте текст ниже:', 'info');
+                document.getElementById('message').innerHTML = 
+                    `<div class="info" style="text-align: left;">
+                        <p>Скопируйте этот текст и отправьте админу:</p>
+                        <textarea style="width: 100%; height: 200px; background: #222; color: white; border: none; padding: 10px; border-radius: 5px; margin-top: 10px;">${text}</textarea>
+                    </div>`;
+            });
+        }
+
+        // Загрузка страницы
         window.onload = function() {
-            const savedVote = JSON.parse(localStorage.getItem('slay_vote'));
+            // Загружаем сохраненный голос
+            const savedVote = JSON.parse(localStorage.getItem('slay_my_vote') || '{}');
             if(savedVote) {
                 for(let i = 1; i <= 12; i++) {
                     const input = document.getElementById('n' + i);
@@ -509,55 +844,30 @@
                 }
             }
             
+            // Обновляем счетчики
+            updateMyVotesCount();
+            updateStatsCount();
+            
+            // Показываем результаты
             showResults();
-        }
-        
-        // Экспорт данных (для админа)
-        function exportData() {
-            const stats = localStorage.getItem('slay_stats');
-            const vote = localStorage.getItem('slay_vote');
             
-            const data = {
-                stats: JSON.parse(stats || '{}'),
-                myVote: JSON.parse(vote || '{}'),
-                exportTime: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = 'slay_votes.json';
-            a.click();
-            
-            showMessage('✅ Данные экспортированы в файл slay_votes.json', '#4CAF50');
-        }
-        
-        // Скрытая админка по Ctrl+Alt+D
-        document.addEventListener('keydown', function(e) {
-            if(e.ctrlKey && e.altKey && e.key === 'd') {
-                const admin = prompt('Админ-действие:\n1 - Экспорт данных\n2 - Очистить все\n3 - Статистика');
-                
-                if(admin === '1') {
-                    exportData();
-                } else if(admin === '2') {
-                    if(confirm('УДАЛИТЬ ВСЕ ДАННЫЕ?')) {
-                        localStorage.clear();
-                        showMessage('🗑️ Все данные удалены', 'red');
-                        showResults();
+            // Плавная прокрутка
+            document.querySelectorAll('nav a').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetId = this.getAttribute('href');
+                    if(targetId.startsWith('#')) {
+                        const targetElement = document.querySelector(targetId);
+                        if(targetElement) {
+                            window.scrollTo({
+                                top: targetElement.offsetTop - 80,
+                                behavior: 'smooth'
+                            });
+                        }
                     }
-                } else if(admin === '3') {
-                    const stats = JSON.parse(localStorage.getItem('slay_stats') || '{}');
-                    let total = 0;
-                    Object.values(stats).forEach(nom => {
-                        Object.values(nom).forEach(count => {
-                            total += count;
-                        });
-                    });
-                    alert(`Всего голосов в статистике: ${total}`);
-                }
-            }
-        });
+                });
+            });
+        }
     </script>
 </body>
 </html>
