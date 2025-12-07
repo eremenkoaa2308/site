@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Тест Supabase</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Тест подключения к Supabase</h1>
+    <div id="result"></div>
+    
+    <script>
+        // Ваши ключи
+        const SUPABASE_URL = 'https://puegfmyflnyrbmjanwgt.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_VmPYD4BzsIQbA01Cp7OTGg_w6c7qUIl';
+        
+        // Создаем клиент
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        async function testConnection() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                resultDiv.innerHTML = '<p>🔄 Подключаемся к Supabase...</p>';
+                
+                // Пробуем получить данные из таблицы votes
+                const { data, error, count } = await supabase
+                    .from('votes')
+                    .select('*', { count: 'exact' });
+                
+                if (error) {
+                    resultDiv.innerHTML = `
+                        <p style="color: red;">❌ Ошибка подключения:</p>
+                        <pre>${JSON.stringify(error, null, 2)}</pre>
+                        <p>Возможно, таблица "votes" не существует</p>
+                    `;
+                } else {
+                    resultDiv.innerHTML = `
+                        <p style="color: green;">✅ Подключение успешно!</p>
+                        <p>URL: ${SUPABASE_URL}</p>
+                        <p>Ключ: ${SUPABASE_KEY.substring(0, 20)}...</p>
+                        <p>Записей в таблице votes: ${count}</p>
+                        <p>Данные: ${JSON.stringify(data)}</p>
+                    `;
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <p style="color: red;">❌ Критическая ошибка:</p>
+                    <pre>${error.message}</pre>
+                `;
+            }
+        }
+        
+        // Запускаем тест при загрузке страницы
+        window.onload = testConnection;
+    </script>
+</body>
+</html>

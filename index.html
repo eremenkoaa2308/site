@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SLAY AWARDS 2025</title>
+    <title>RND AWARDS 2025</title>
     <style>
         * {
             margin: 0;
@@ -455,21 +455,31 @@
     </footer>
 
     <script>
-    // === КОНФИГУРАЦИЯ ===
-    // Эти значения мы получим на следующем шаге, пока оставь как есть
-    const API_BASE_URL = window.location.origin; // Будет работать на твоём домене Vercel
-
     // === ОСНОВНЫЕ ФУНКЦИИ ===
+    
+    // Показать сообщение
+    function showMessage(text, type = 'info') {
+        const msg = document.getElementById('message');
+        msg.innerHTML = text;
+        msg.className = `message ${type}`;
+        msg.style.display = 'block';
+
+        if (type !== 'error') {
+            setTimeout(() => msg.style.display = 'none', 5000);
+        }
+    }
+    
+    // Сохранить голос
     async function saveVote() {
         let allFilled = true;
         const voteData = {};
-
-        // 1. Собираем данные с формы
+        
+        // 1. Проверяем заполненность полей
         for (let i = 1; i <= 12; i++) {
             const input = document.getElementById('n' + i);
             const value = input.value.trim();
             voteData['n' + i] = value;
-
+            
             if (!value) {
                 input.style.borderColor = 'red';
                 allFilled = false;
@@ -477,36 +487,34 @@
                 input.style.borderColor = '#444';
             }
         }
-
+        
         if (!allFilled) {
             showMessage('Заполните все номинации!', 'error');
             return;
         }
-
+        
         // 2. Показываем загрузку
         const submitBtn = document.querySelector('button[onclick="saveVote()"]');
         const originalText = submitBtn.textContent;
         submitBtn.textContent = 'Отправляем...';
         submitBtn.disabled = true;
-
+        
         try {
-            // 3. Отправляем на наш API (функцию, которую создадим)
-            const response = await fetch(`${API_BASE_URL}/api/vote`, {
+            // 3. Отправляем на API
+            const response = await fetch('/api/vote', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify(voteData)
             });
-
+            
             const result = await response.json();
-
+            
             if (response.ok) {
-                showMessage(`✅ Голос #${result.id} успешно сохранён в базе данных!`, 'success');
-                // Очищаем форму после успешной отправки
-                for (let i = 1; i <= 12; i++) {
-                    document.getElementById('n' + i).value = '';
-                }
+                showMessage(`✅ Голос успешно сохранен! ID: ${result.voter_token}`, 'success');
+                // Очищаем форму
+                clearVote();
                 // Обновляем результаты
                 loadResults();
             } else {
@@ -521,35 +529,40 @@
             submitBtn.disabled = false;
         }
     }
-
+    
+    // Загрузить результаты
     async function loadResults() {
         try {
-            const response = await fetch(`${API_BASE_URL}/api/results`);
-            const data = await response.json();
-
-            if (response.ok) {
-                displayResults(data);
-            } else {
-                document.getElementById('resultsContainer').innerHTML =
-                    `<p class="error">Не удалось загрузить результаты</p>`;
+            const response = await fetch('/api/vote');
+            if (!response.ok) {
+                throw new Error('Ошибка загрузки');
             }
+            const data = await response.json();
+            displayResults(data);
         } catch (error) {
             console.error('Ошибка загрузки результатов:', error);
+            document.getElementById('resultsContainer').innerHTML = 
+                '<p style="color: #888; text-align: center; padding: 30px;">Загрузка результатов...</p>';
         }
     }
-
+    
+    // Показать результаты
     function displayResults(data) {
         const container = document.getElementById('resultsContainer');
-        if (!data || data.length === 0) {
-            container.innerHTML = '<p style="text-align: center; color: #888; padding: 30px;">Голосов пока нет</p>';
+        
+        if (!data || !data.results || data.results.length === 0) {
+            container.innerHTML = '<p style="color: #888; text-align: center; padding: 30px;">Голосов пока нет</p>';
             return;
         }
-
-        let html = '<div class="stats-header">';
-        html += `<h3>📊 Результаты в реальном времени (Всего голосов: ${data.total})</h3>`;
-        html += `<p>Обновлено: ${new Date().toLocaleTimeString()}</p>`;
-        html += '</div>';
-
+        
+        let html = `
+            <div style="background: #222; padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+                <h3 style="color: red; margin-bottom: 10px;">📊 РЕЗУЛЬТАТЫ ГОЛОСОВАНИЯ</h3>
+                <p style="color: #ccc;">Всего голосов: <strong>${data.total}</strong></p>
+                <p style="color: #888; font-size: 14px;">Обновлено: ${new Date().toLocaleTimeString()}</p>
+            </div>
+        `;
+        
         // Группируем по номинациям
         const byNomination = {};
         data.results.forEach(item => {
@@ -558,71 +571,92 @@
             }
             byNomination[item.nomination].push(item);
         });
-
+        
         // Отображаем каждую номинацию
         Object.keys(byNomination).forEach(nom => {
             const items = byNomination[nom];
             const maxVotes = Math.max(...items.map(i => i.vote_count));
-
-            html += `<div class="result-item">
-                <div class="result-header">
-                    <h4>${nom}</h4>
-                    <span>Голосов: ${items.reduce((sum, i) => sum + i.vote_count, 0)}</span>
-                </div>`;
-
+            
+            html += `
+                <div class="result-item" style="background: #111; padding: 20px; margin-bottom: 20px; border-radius: 10px; border-left: 4px solid red;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #333;">
+                        <h4 style="color: white;">${nom}</h4>
+                        <span style="color: #ccc;">${items.reduce((sum, i) => sum + i.vote_count, 0)} голосов</span>
+                    </div>
+            `;
+            
             items.forEach(item => {
                 const percent = maxVotes > 0 ? (item.vote_count / maxVotes) * 100 : 0;
                 html += `
-                <div class="result-row">
-                    <div class="candidate-name">${item.candidate}</div>
-                    <div class="vote-count">${item.vote_count}</div>
-                    <div class="result-bar">
-                        <div class="fill" style="width: ${percent}%"></div>
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                            <span style="color: white;">${item.candidate}</span>
+                            <span style="color: #ccc;">${item.vote_count}</span>
+                        </div>
+                        <div style="height: 20px; background: #222; border-radius: 10px; overflow: hidden; margin-bottom: 15px;">
+                            <div style="height: 100%; background: red; width: ${percent}%; transition: width 1s;"></div>
+                        </div>
                     </div>
-                </div>`;
+                `;
             });
-
-            html += '</div>';
+            
+            html += `</div>`;
         });
-
+        
         container.innerHTML = html;
-
+        
         // Анимация полосок
         setTimeout(() => {
-            document.querySelectorAll('.fill').forEach(fill => {
+            container.querySelectorAll('div[style*="width:"]').forEach(fill => {
                 const width = fill.style.width;
                 fill.style.width = '0%';
                 setTimeout(() => fill.style.width = width, 50);
             });
         }, 100);
     }
-
-    // === ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ===
-    function showMessage(text, type = 'info') {
-        const msg = document.getElementById('message');
-        msg.innerHTML = text;
-        msg.className = `message ${type}`;
-        msg.style.display = 'block';
-
-        if (type !== 'error') {
-            setTimeout(() => msg.style.display = 'none', 5000);
-        }
-    }
-
+    
+    // Очистить форму
     function clearVote() {
-        if (confirm('Очистить форму голосования?')) {
-            for (let i = 1; i <= 12; i++) {
-                document.getElementById('n' + i).value = '';
-                document.getElementById('n' + i).style.borderColor = '#444';
-            }
-            showMessage('Форма очищена', 'info');
+        for (let i = 1; i <= 12; i++) {
+            document.getElementById('n' + i).value = '';
+            document.getElementById('n' + i).style.borderColor = '#444';
         }
     }
-
+    
+    // Дополнительные функции (из вашего кода)
+    function exportMyVote() {
+        showMessage('Функция экспорта будет реализована позже', 'info');
+    }
+    
+    function shareMyVote() {
+        showMessage('Функция отправки будет реализована позже', 'info');
+    }
+    
+    function exportAllStats() {
+        showMessage('Функция экспорта статистики будет реализована позже', 'info');
+    }
+    
+    function loadVotesFromFile() {
+        showMessage('Функция загрузки из файла будет реализована позже', 'info');
+    }
+    
+    function showCombinedResults() {
+        showMessage('Функция объединения результатов будет реализована позже', 'info');
+    }
+    
+    function clearAllData() {
+        if (confirm('Вы уверены? Это удалит все локальные данные.')) {
+            localStorage.clear();
+            showMessage('Все данные очищены', 'success');
+            loadResults();
+        }
+    }
+    
     // Загружаем результаты при открытии страницы
     document.addEventListener('DOMContentLoaded', function() {
         loadResults();
-        // Плавная прокрутка для навигации
+        
+        // Плавная прокрутка
         document.querySelectorAll('nav a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function(e) {
                 e.preventDefault();
