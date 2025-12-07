@@ -1,12 +1,14 @@
-// /api/vote.js - ПОЛНАЯ РАБОЧАЯ ВЕРСИЯ
+// /api/vote.js - ГАРАНТИРОВАННО РАБОЧАЯ ВЕРСИЯ
 import { createClient } from '@supabase/supabase-js';
 
-// === ВАШИ КЛЮЧИ (уже правильные) ===
+// ВАШИ КЛЮЧИ
 const SUPABASE_URL = 'https://puegfmyflnyrbmjanwgt.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_VmPYD4BzsIQbA01Cp7OTGg_w6c7qUIl';
 
+// Создаем клиент
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 
+// Номинации
 const NOMINATIONS = [
     'RND-KING',
     'АФК RND года',
@@ -23,110 +25,131 @@ const NOMINATIONS = [
 ];
 
 export default async function handler(req, res) {
-    // Включаем CORS
+    // CORS заголовки
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
-    // Для предзапросов OPTIONS
+    // OPTIONS запрос
     if (req.method === 'OPTIONS') {
         return res.status(200).end();
     }
     
-    // 1. СОХРАНЕНИЕ ГОЛОСА В SUPABASE (POST)
+    // POST - СОХРАНЕНИЕ ГОЛОСА
     if (req.method === 'POST') {
         try {
             const voteData = req.body;
-            const votes = [];
             
-            console.log('📨 Получен голос:', voteData);
+            // ВАЖНО: Логируем что получаем
+            console.log('📨 Получены данные:', JSON.stringify(voteData).substring(0, 200));
             
-            // Проверяем все поля
+            // Проверка данных
             for (let i = 1; i <= 12; i++) {
                 if (!voteData[`n${i}`] || voteData[`n${i}`].trim() === '') {
                     return res.status(400).json({
-                        error: `Заполните номинацию: ${NOMINATIONS[i-1]}`
+                        success: false,
+                        error: `Заполните: ${NOMINATIONS[i-1]}`
                     });
                 }
             }
             
-            // Создаем уникальный токен голосующего
+            // Создаем токен
             const voterToken = `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            console.log('🆔 Создан токен:', voterToken);
             
-            // Подготавливаем данные для Supabase
+            // ПОДГОТОВКА ДАННЫХ - КЛЮЧЕВОЙ МОМЕНТ!
+            const votesToInsert = [];
+            
             for (let i = 0; i < 12; i++) {
-                votes.push({
+                const candidateName = voteData[`n${i+1}`].trim();
+                
+                // Убедимся, что имя не пустое и не слишком длинное
+                if (!candidateName || candidateName.length > 100) {
+                    return res.status(400).json({
+                        success: false,
+                        error: `Некорректное имя в номинации ${NOMINATIONS[i]}`
+                    });
+                }
+                
+                votesToInsert.push({
                     nomination: NOMINATIONS[i],
-                    candidate: voteData[`n${i+1}`].trim(),
+                    candidate: candidateName,
                     voter_token: voterToken,
                     created_at: new Date().toISOString()
                 });
             }
             
-            console.log('💾 Сохраняю в Supabase:', votes.length, 'записей');
+            console.log(`💾 Готово к сохранению: ${votesToInsert.length} записей`);
             
-            // Сохраняем в Supabase
-            const { data, error } = await supabase
-                .from('votes')
-                .insert(votes);
+            // ⚡ СПОСОБ 1: Сохраняем по одной записи (надежнее)
+            const results = [];
             
-            if (error) {
-                console.error('❌ Ошибка Supabase:', error);
-                return res.status(500).json({ 
-                    error: 'Ошибка сохранения в базу данных',
-                    details: error.message,
-                    hint: error.hint,
-                    code: error.code
-                });
+            for (const vote of votesToInsert) {
+                console.log('➡️ Сохраняю:', vote.nomination, '-', vote.candidate);
+                
+                const { data, error } = await supabase
+                    .from('votes')
+                    .insert(vote);
+                
+                if (error) {
+                    console.error('❌ Ошибка при сохранении записи:', error);
+                    throw new Error(`Ошибка Supabase: ${error.message}`);
+                }
+                
+                results.push(data);
             }
             
-            console.log('✅ Голос сохранен, токен:', voterToken);
+            console.log('✅ Все голоса сохранены!');
             
             return res.status(201).json({
                 success: true,
                 message: 'Голос успешно сохранен в базе данных!',
                 voter_token: voterToken,
+                saved_count: votesToInsert.length,
                 timestamp: new Date().toISOString()
             });
             
         } catch (error) {
-            console.error('🔥 Серверная ошибка:', error);
-            return res.status(500).json({ 
-                error: 'Внутренняя ошибка сервера',
-                details: error.message
+            console.error('🔥 Критическая ошибка:', error.message);
+            
+            return res.status(500).json({
+                success: false,
+                error: 'Ошибка сохранения',
+                details: error.message,
+                suggestion: 'Проверьте таблицу votes в Supabase'
             });
         }
     }
     
-    // 2. ПОЛУЧЕНИЕ РЕЗУЛЬТАТОВ ИЗ SUPABASE (GET)
+    // GET - ПОЛУЧЕНИЕ РЕЗУЛЬТАТОВ
     if (req.method === 'GET') {
         try {
-            console.log('📊 Запрос результатов из Supabase...');
+            console.log('📊 Запрашиваю результаты...');
             
-            // Получаем все голоса из Supabase
             const { data: votes, error } = await supabase
                 .from('votes')
-                .select('*')
-                .order('created_at', { ascending: false });
+                .select('*');
             
             if (error) {
-                console.error('❌ Ошибка Supabase при чтении:', error);
-                throw error;
-            }
-            
-            console.log('📈 Получено голосов из БД:', votes ? votes.length : 0);
-            
-            // Если голосов нет
-            if (!votes || votes.length === 0) {
-                return res.status(200).json({
-                    total: 0,
-                    results: [],
-                    message: 'Голосов пока нет',
-                    timestamp: new Date().toISOString()
+                console.error('❌ Ошибка чтения:', error);
+                return res.status(500).json({
+                    success: false,
+                    error: 'Ошибка чтения из базы'
                 });
             }
             
-            // Группируем и считаем голоса
+            console.log(`📈 Получено ${votes?.length || 0} голосов`);
+            
+            if (!votes || votes.length === 0) {
+                return res.status(200).json({
+                    success: true,
+                    total: 0,
+                    results: [],
+                    message: 'Голосов пока нет'
+                });
+            }
+            
+            // Группировка
             const grouped = {};
             votes.forEach(vote => {
                 const key = `${vote.nomination}|${vote.candidate}`;
@@ -143,25 +166,24 @@ export default async function handler(req, res) {
             const results = Object.values(grouped)
                 .sort((a, b) => b.vote_count - a.vote_count);
             
-            // Считаем уникальных голосующих
-            const uniqueVoters = [...new Set(votes.map(v => v.voter_token))].length;
-            
             return res.status(200).json({
-                total: uniqueVoters,
+                success: true,
+                total: votes.length,
                 results: results,
-                raw_count: votes.length,
-                updated_at: new Date().toISOString(),
-                message: `Уникальных голосующих: ${uniqueVoters}`
+                updated_at: new Date().toISOString()
             });
             
         } catch (error) {
-            console.error('🔥 Ошибка загрузки результатов:', error);
-            return res.status(500).json({ 
-                error: 'Ошибка загрузки результатов из базы',
-                details: error.message
+            console.error('❌ Ошибка обработки:', error);
+            return res.status(500).json({
+                success: false,
+                error: 'Ошибка обработки результатов'
             });
         }
     }
     
-    return res.status(405).json({ error: 'Метод не разрешен' });
+    return res.status(405).json({
+        success: false,
+        error: 'Метод не поддерживается'
+    });
 }
