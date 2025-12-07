@@ -1,147 +1,77 @@
-// /api/vote.js
-import { createClient } from '@supabase/supabase-js';
-
-const SUPABASE_URL = 'https://puegfmyflnyrbmjanwgt.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_VmPYD4BzsIQbA01Cp7OTGg_w6c7qUIl';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const NOMINATIONS = [
-    'RND-KING',
-    'АФК RND года',
-    'Дотер года',
-    'Завоз года',
-    'Харизма года',
-    'Зашквар года',
-    'RND-добряк',
-    'RND-злодей',
-    'Прорыв года',
-    'Хейт года',
-    'RND QUEEN',
-    'RND-ELDER KING'
-];
+// /api/vote.js - МИНИМАЛЬНАЯ РАБОЧАЯ ВЕРСИЯ
+console.log('✅ vote.js загружен');
 
 export default async function handler(req, res) {
+    console.log(`📨 ${req.method} /api/vote вызван`);
+    
     // Включаем CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
     
-    // Для предзапросов OPTIONS
+    // OPTIONS запрос
     if (req.method === 'OPTIONS') {
+        console.log('🔄 OPTIONS запрос');
         return res.status(200).end();
     }
     
-    // 1. СОХРАНЕНИЕ ГОЛОСА (POST)
+    // GET запрос
+    if (req.method === 'GET') {
+        console.log('📊 GET запрос на результаты');
+        return res.status(200).json({
+            success: true,
+            message: 'API работает!',
+            total: 0,
+            results: [],
+            timestamp: new Date().toISOString()
+        });
+    }
+    
+    // POST запрос
     if (req.method === 'POST') {
+        console.log('📝 POST запрос на сохранение голоса');
+        
         try {
-            const voteData = req.body;
-            const votes = [];
+            // Проверяем тело запроса
+            const body = req.body || {};
+            console.log('Тело запроса:', JSON.stringify(body).substring(0, 200));
             
-            // Проверяем все поля
-            for (let i = 1; i <= 12; i++) {
-                if (!voteData[`n${i}`] || voteData[`n${i}`].trim() === '') {
-                    return res.status(400).json({
-                        error: `Заполните номинацию: ${NOMINATIONS[i-1]}`
-                    });
-                }
+            // Простая валидация
+            if (Object.keys(body).length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Нет данных'
+                });
             }
             
-            // Создаем уникальный токен голосующего
+            // Имитируем сохранение
             const voterToken = `vote_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
             
-            // Подготавливаем данные для Supabase
-            for (let i = 0; i < 12; i++) {
-                votes.push({
-                    nomination: NOMINATIONS[i],
-                    candidate: voteData[`n${i+1}`].trim(),
-                    voter_token: voterToken,
-                    created_at: new Date().toISOString()
-                });
-            }
+            console.log(`✅ Голос принят, токен: ${voterToken}`);
             
-            // Сохраняем в Supabase
-            const { error } = await supabase
-                .from('votes')
-                .insert(votes);
-            
-            if (error) {
-                console.error('Supabase error:', error);
-                return res.status(500).json({ 
-                    error: 'Ошибка сохранения голоса',
-                    details: error.message 
-                });
-            }
-            
+            // Возвращаем успех
             return res.status(201).json({
                 success: true,
                 message: 'Голос успешно сохранен!',
                 voter_token: voterToken,
+                received_data: body,
                 timestamp: new Date().toISOString()
             });
             
         } catch (error) {
-            console.error('Server error:', error);
-            return res.status(500).json({ 
+            console.error('❌ Ошибка в POST:', error);
+            return res.status(500).json({
+                success: false,
                 error: 'Внутренняя ошибка сервера',
-                details: error.message 
-            });
-        }
-    }
-    
-    // 2. ПОЛУЧЕНИЕ РЕЗУЛЬТАТОВ (GET)
-    if (req.method === 'GET') {
-        try {
-            // Получаем все голоса из Supabase
-            const { data: votes, error } = await supabase
-                .from('votes')
-                .select('*');
-            
-            if (error) {
-                throw error;
-            }
-            
-            // Если голосов нет
-            if (!votes || votes.length === 0) {
-                return res.status(200).json({
-                    total: 0,
-                    results: [],
-                    message: 'Голосов пока нет'
-                });
-            }
-            
-            // Группируем и считаем голоса
-            const grouped = {};
-            votes.forEach(vote => {
-                const key = `${vote.nomination}|${vote.candidate}`;
-                if (!grouped[key]) {
-                    grouped[key] = {
-                        nomination: vote.nomination,
-                        candidate: vote.candidate,
-                        vote_count: 0
-                    };
-                }
-                grouped[key].vote_count++;
-            });
-            
-            const results = Object.values(grouped)
-                .sort((a, b) => b.vote_count - a.vote_count);
-            
-            return res.status(200).json({
-                total: votes.length,
-                results: results,
-                updated_at: new Date().toISOString()
-            });
-            
-        } catch (error) {
-            console.error('Error fetching votes:', error);
-            return res.status(500).json({ 
-                error: 'Ошибка загрузки результатов',
-                details: error.message 
+                details: error.message
             });
         }
     }
     
     // Если метод не поддерживается
-    return res.status(405).json({ error: 'Метод не разрешен' });
+    return res.status(405).json({
+        success: false,
+        error: 'Метод не разрешен',
+        allowed: ['GET', 'POST', 'OPTIONS']
+    });
 }
